@@ -1,0 +1,16 @@
+services:
+  mongodb:
+    image: mongo:6.0.13
+    restart: always
+    ports:
+      - "27016:27017"
+    volumes:
+      - ./db-dump/mongo/data:/data/db
+      - ./db-dump/mongo/config:/etc/mongod.conf
+      - ./db-dump/mongo/init:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
