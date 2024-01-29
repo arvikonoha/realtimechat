@@ -14,7 +14,7 @@ module.exports.register = async function register(req, res) {
     const salt = await bcrypt.genSalt()
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const id = await orm.user.create({
+    const id = await orm.users.create({
         name,
         password: hashedPassword
     })

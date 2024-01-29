@@ -7,6 +7,7 @@ const cors = require('cors');
 const { createServer } = require("http");
 const uuid = require("uuid");
 const mongoose = require('mongoose')
+const swaggerDocs = require('./swagger-init.js')
 
 mongoose.connect(`mongodb://localhost:27016/realtime-chat-db`, {
   useNewUrlParser: true,
@@ -39,15 +40,24 @@ io.on('connection', async (socket) => {
     console.log('Connected to the server')
     const socketID = socket.id;
     socket.user = socket.request.user
+    const socketUser = socket.user
     let users = new Map();
     for (let [id, socket] of io.of("/").sockets) {
-      const messages = await orm.messages.getMessagesForID(socket.user.id, id === socketID)
+      const receivedMessages = await orm.messages.getMessagesForID(socket.user.id, socketUser.id)
       users.set(socket.user.id,{
         socketID: id,
         name: socket.user.name,
         id: socket.user.id,
-        messages: messages
+        messages: receivedMessages
       });
+      
+      const sentMessages = await orm.messages.getMessagesForID(socketUser.id, socket.user.id)
+      socket.emit('user connected', {
+        socketID,
+        name: socketUser.name,
+        id: socketUser.id,
+        messages: sentMessages
+      })
     }
     socket.emit("users", Array.from(users.values()));
     socket.on('chat:send', async ({to, targetUserID, content}, callback) => {
@@ -59,19 +69,12 @@ io.on('connection', async (socket) => {
         io.to(to).emit('chat:reply', result)
         callback(result)
     });
-    const messages = await orm.messages.getMessagesForID(socket.user.id)
-    socket.broadcast.emit("user connected", {
-      socketID,
-      name: socket.user.name,
-      id: socket.user.id,
-      messages: messages
-    });
 
     socket.on('disconnect', () => {
       users.delete(socket.user.id)
-      console.log( Array.from(users.values()))
       io.emit('users', Array.from(users.values()))
     })
 })
 
+swaggerDocs(app, 4000)
 httpServer.listen(4000)
