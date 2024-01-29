@@ -75,11 +75,16 @@ function App() {
       })
     }
 
+    const onUserDisconnected = (disconnectedUser) => {
+      setUsers(users => users.filter(user => user.id === disconnectedUser.id))
+    }
+
     const onConnect = () => {
       setIsConnected(true) 
       socketSingleton.socket.on('chat:reply', onMessage)
       socketSingleton.socket.on('users', onUsersList);
       socketSingleton.socket.on('user connected', onUserConnected);
+      socketSingleton.socket.on('user disconnected', onUserDisconnected);
     };
   
     const onDisconnect = () => { 
@@ -87,6 +92,7 @@ function App() {
       socketSingleton.socket.off('chat:reply', onMessage)
       socketSingleton.socket.off('users', onUsersList);
       socketSingleton.socket.off('user connected', onUserConnected);
+      socketSingleton.socket.off('user disconnected', onUserDisconnected);
     }
   
     const deregisterSocketEvents = () => { 

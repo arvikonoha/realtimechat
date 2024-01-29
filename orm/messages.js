@@ -1,7 +1,7 @@
 const Message = require('../models/Message')
 
 module.exports.getMessagesForID = function getMessagesForID(from, to) {
-    return Message.find({from, to})
+    return Message.find({$or: [{from, to}, {from:to, to: from}]})
     .sort({ timestamp: -1 }) // -1 for descending order
 }
 

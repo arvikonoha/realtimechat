@@ -36,13 +36,15 @@ io.engine.use((req, res, next) => {
 
   middlewares.auth.authenticate(req, res, next)
 });
-io.on('connection', async (socket) => {
+io.of('/chat').on('connection', async (socket) => {
+  try {
+    
     console.log('Connected to the server')
     const socketID = socket.id;
     socket.user = socket.request.user
     const socketUser = socket.user
     let users = new Map();
-    for (let [id, socket] of io.of("/").sockets) {
+    for (let [id, socket] of io.of("/chat").sockets) {
       const receivedMessages = await orm.messages.getMessagesForID(socket.user.id, socketUser.id)
       users.set(socket.user.id,{
         socketID: id,
@@ -52,7 +54,7 @@ io.on('connection', async (socket) => {
       });
       
       const sentMessages = await orm.messages.getMessagesForID(socketUser.id, socket.user.id)
-      socket.emit('user connected', {
+      io.of('/chat').to(id).emit('user connected', {
         socketID,
         name: socketUser.name,
         id: socketUser.id,
@@ -66,14 +68,21 @@ io.on('connection', async (socket) => {
           from: socket.user.id,
           content
         })
-        io.to(to).emit('chat:reply', result)
+        io.of('/chat').to(to).emit('chat:reply', result)
         callback(result)
     });
 
     socket.on('disconnect', () => {
-      users.delete(socket.user.id)
-      io.emit('users', Array.from(users.values()))
+      io.of('/chat').emit('user disconnected', {
+        socketID,
+        name: socketUser.name,
+        id: socketUser.id,
+      })
+      io.of('/chat').emit('users', Array.from(users.values()))
     })
+  } catch (error) {
+    console.log("Error: ", error)
+  }
 })
 
 swaggerDocs(app, 4000)
