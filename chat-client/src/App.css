@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,800;1,400;1,700;1,800&display=swap');
 * {
     margin: 0;
     padding: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Open sans', sans-serif;
 }
 
 .landing-screen {
@@ -36,7 +36,7 @@
     outline: none;
 }
 
-.chat-input button, .user-select {
+.chat-input button, .user-select, .room-list .rooms-select {
     text-align: center;
     border: none;
     border-radius: 8px;
@@ -47,7 +47,7 @@
     flex-basis: 42px;
 }
 
-.user-select {
+.user-select, .room-list .rooms-select {
     background-color: #8fa7d1;
     width: 24px;
     height: 28px;
@@ -65,7 +65,8 @@
     align-items: flex-end;
     box-sizing: border-box;
     height: 100%;
-    overflow: scroll;
+    margin-left: 244px;
+    overflow-y: auto;
     background-color: #fff;
 }
 
@@ -73,14 +74,14 @@
     width: auto;
     list-style: none;
     padding: 16px;
-    border-radius: 42px;
+    border-radius: 16px;
     color: #595959;
     background-color: #f0f0f0;
     margin: 4px;
     font-size: 14px;
 }
 
-.auth-modal {
+.auth-modal, .room-modal  {
     position: fixed;
     left:8px;
     top:8px;
@@ -90,20 +91,27 @@
     width: 300px;
 }
 
+.room-modal {
+    top: 224px;
+    left: 264px;
+    background-color: #fff;
+    border: 1px solid #28282886;
+}
+
 .log-out {
     position: fixed;
     left:8px;
     top:8px;
 }
 
-.auth-modal h2 {
+.auth-modal h2, .room-modal  h2{
     color: #282828;
     margin-bottom: 16px;
     font-weight: normal;
 }
 
-.auth-modal input {
-    margin-bottom: 16px;
+.auth-modal input, .room-modal input {
+    margin-top: 16px;
     padding: 8px 16px;
     border-radius: 5px;
     border: none;
@@ -111,12 +119,12 @@
     color: #313131;
 }
 
-.auth-modal input:focus {
+.auth-modal input:focus, .room-modal input:focus {
     border: 2px solid #595959;
     outline: none;
 }
 
-.auth-modal .helper-text {
+.auth-modal .helper-text, .room-modal .helper-text {
     font-size: 14px;
     margin-bottom: 8px;
 }
@@ -130,8 +138,8 @@
     cursor: pointer;
 }
 
-.auth-modal button[type='submit'], .log-out {
-    margin: 8px;
+.auth-modal button[type='submit'], .log-out, .room-modal button[type='submit']{
+    margin: 8px 0;
     border: none;
     background-color: #1467b5;
     color: #fff;
@@ -140,18 +148,30 @@
     cursor: pointer;
 }
 
-.user-list {
+.user-list, .room-list {
     position: fixed;
     left:8px;
     top:64px;
     border-radius: 5px;
     margin: 8px;
-    height: 300px;
+    height: 164px;
     width: 240px;
     background-color: #f8f8f8;
 }
 
-.user-list h2 {
+.room-list {
+    top:224px;
+}
+
+.room-list button {
+    background-color: #1a1a1a;
+    color: #fff;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.user-list h2, .room-list h2 {
     padding: 8px 16px;
     color: #1a1a1a;
     font-size: 14px;
@@ -160,7 +180,7 @@
     background-color: #f2faf5;
 }
 
-.user-list li{
+.user-list li, .room-list li{
     list-style: none;
     border-bottom: 1px solid #ababab;
     color: #595959;
@@ -171,7 +191,7 @@
     align-items: center;
 }
 
-.user-list li p {
+.user-list li p , .room-list li p{
     flex-grow: 1;
 }
 
@@ -182,6 +202,51 @@ li.selected-user {
 }
 
 .chat-display li.external-message {
-    margin-left: 332px;
+    margin-left: 32px;
     align-self: flex-start;
+}
+
+.validation-message {
+    font-size: 12px;
+    margin-top: 8px;
+    color: #b52714;
+}
+
+.welcome-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    height: 100%;
+    color: #313131;
+}
+
+.welcome-note h1{
+    margin-bottom: 24px;
+}
+
+.welcome-note p {
+    font-size: 14px;
+}
+
+.welcome-note .chat-icon{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: baseline;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background-color: #ebeaea;
+    font-size: 12px;
+    color: #313131;
+}
+
+.author {
+    display: block;
+    font-size: smaller;
+    margin-bottom: 4px;
+    font-weight: bolder;
+    color: hsl(calc(random() * 360), 70%, calc(random() * 30));
 }

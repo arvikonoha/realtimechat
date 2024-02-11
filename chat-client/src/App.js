@@ -11,10 +11,24 @@ function App() {
   const [isConnected, setIsConnected] = useState(socketSingleton?.socket?.connected);
   const [isAuthenticated, setAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
+  const [currentRoom, setCurrentRoom] = useState(null)
   const [users, setUsers] = useState([])
+  const [rooms, setRooms] = useState([])
   const [authUser, setAuthUser] = useState(null)
 
-  const userSelected = (user) => setCurrentUser(user)
+  const userSelected = (user) => {
+    setCurrentRoom(null)
+    setCurrentUser(user)
+  }
+
+  const roomSelected = (room) => {
+    setCurrentUser(null)
+    setCurrentRoom(room)
+  }
+
+  const announceRoomCreation = (room) => {
+    socketSingleton.socket.emit('room:created', room)
+  }
 
   const setAuthToken = (token) => {
     try {
@@ -28,8 +42,8 @@ function App() {
   }
 
   const sendMessage = (content) => {
-    if (isConnected) socketSingleton.socket.emit('chat:send', {content, to: currentUser.socketID, targetUserID: currentUser.id}, (data) => {
-      if (socketSingleton.socket.id !== currentUser.socketID) setCurrentUser({...currentUser, messages: [data, ...currentUser.messages]})
+    if (isConnected) socketSingleton.socket.emit('chat:send', {content, to: currentUser?.id, targetRoom: currentRoom ? currentRoom.id: 'chat'}, (data) => {
+      if (currentRoom === null && socketSingleton.socket.id !== currentUser.socketID) setCurrentUser({...currentUser, messages: [data, ...currentUser.messages]})
     })
   }
 
@@ -48,11 +62,18 @@ function App() {
   useEffect(() => {
     
     const onMessage = (message) => {
-        setCurrentUser(currentUser => currentUser?.id === message.from?({...currentUser, messages: [message, ...currentUser.messages]}):currentUser)
-        setUsers(users => users.map(
-          user => user.id === message.from 
-            ? ({...user, messages: [message,...user.messages]})
-            : user
+      console.log(message)
+      setCurrentUser(currentUser => currentUser?.id === message.from &&  message.room === 'chat' ?({...currentUser, messages: [message, ...currentUser.messages]}):currentUser)
+      setUsers(users => users.map(
+        user => user.id === message.from  && message.room === 'chat'
+          ? ({...user, messages: [message,...user.messages]})
+          : user
+      ))
+        setCurrentRoom(currentRoom => currentRoom?.id === message.room ? ({...currentRoom, messages: [message, ...currentRoom.messages]}):currentRoom)
+        setRooms(rooms => rooms.map(
+          room => room.id === message.room 
+            ? ({...room, messages: [message,...room.messages]})
+            : room
           )
         )
     }
@@ -62,6 +83,11 @@ function App() {
       const authUser = users.find(user => user.socketID === socketSingleton.socket.id)
       setAuthUser(authUser)
       setUsers(users)
+    }
+
+    const onRoomsList = (rooms) => {
+      setCurrentRoom(null)
+      setRooms(rooms)
     }
 
     const onUserConnected = (user) => {
@@ -75,15 +101,27 @@ function App() {
       })
     }
 
+    const onRoomConnected = (newRoom) => {
+      setRooms(rooms => {
+        const roomExisits = rooms.some(room => room.id === newRoom.id)
+        if(!roomExisits) {
+          return [...rooms, newRoom]
+        } 
+        return rooms;
+      })
+    }
+
     const onUserDisconnected = (disconnectedUser) => {
-      setUsers(users => users.filter(user => user.id === disconnectedUser.id))
+      setUsers(users => users.filter(user => user.id !== disconnectedUser.id))
     }
 
     const onConnect = () => {
       setIsConnected(true) 
       socketSingleton.socket.on('chat:reply', onMessage)
       socketSingleton.socket.on('users', onUsersList);
+      socketSingleton.socket.on('rooms', onRoomsList);
       socketSingleton.socket.on('user connected', onUserConnected);
+      socketSingleton.socket.on('room connected', onRoomConnected);
       socketSingleton.socket.on('user disconnected', onUserDisconnected);
     };
   
@@ -91,7 +129,9 @@ function App() {
       setIsConnected(false);
       socketSingleton.socket.off('chat:reply', onMessage)
       socketSingleton.socket.off('users', onUsersList);
+      socketSingleton.socket.off('rooms', onRoomsList);
       socketSingleton.socket.off('user connected', onUserConnected);
+      socketSingleton.socket.off('room connected', onRoomConnected);
       socketSingleton.socket.off('user disconnected', onUserDisconnected);
     }
   
@@ -121,9 +161,16 @@ function App() {
   return (
     <div className="App landing-screen">
       <AuthModal isAuthenticated={isAuthenticated} logOut={logOut} setAuthToken={setAuthToken} />
-      <AuthUsers selectedUserId={currentUser?.id} userSelected={userSelected} users={users}/>
-      <ChatDisplay currentUserId={authUser?.id} messages={currentUser&&currentUser.messages?currentUser.messages:[]} />
-      <ChatInput sendMessage={sendMessage} chatDisabled={!isConnected || !isAuthenticated ||!currentUser} />
+      <AuthUsers announceRoomCreation={announceRoomCreation} rooms={rooms} selectedUserId={currentUser?.id} selectedRoomID={currentRoom?.id} roomSelected={roomSelected} userSelected={userSelected} users={users}/>
+      <ChatDisplay isAuthenticated={isAuthenticated} roomSelected={currentRoom} userSelected={currentUser} currentUserId={authUser?.id} messages={
+        currentUser&&currentUser.messages
+        ? currentUser.messages:(
+            currentRoom&&currentRoom.messages 
+            ? currentRoom.messages 
+            : []
+          )
+        } />
+      <ChatInput sendMessage={sendMessage} chatDisabled={!isConnected || !isAuthenticated ||(!currentUser && !currentRoom)} />
     </div>
   );
 }
