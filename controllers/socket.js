@@ -42,9 +42,7 @@ module.exports = (io, room) => async (socket) => {
         
         /* Get the previous convorsation between existing and the new user */
         const previousConversations = await orm.messages.getMessagesForRoom(room._id)
-        console.log(previousConversations)
         socket.join(room._id.toString())
-        console.log(room._id.toString())
         rooms.set(room._id,{
           name: room.name,
           id: room._id,
