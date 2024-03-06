@@ -14,8 +14,6 @@ class SocketSingleton {
         Authorization: `Bearer ${this.authToken}`
       }
     });
-
-    console.log(this.socket)
   }
 
   updateToken(newToken) {

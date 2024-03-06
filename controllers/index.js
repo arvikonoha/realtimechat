@@ -1,4 +1,6 @@
 module.exports.auth = require('./auth')
 module.exports.users = require('./users')
 module.exports.socket = require('./socket')
-module.exports.rooms = require('./room')
+module.exports.rooms = require('./rooms')
+module.exports.messages = require('./messages')
+module.exports.projects = require('./projects')

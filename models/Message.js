@@ -9,11 +9,13 @@ const MessageSchema = mongoose.Schema({
     to: {
         type: mongoose.Schema.ObjectId,
         ref: 'users',
-        type: String,
     },
     content: {
         type: String,
         required: true
+    },
+    "project": {
+        type: String
     },
     timestamp: { type: Date, default: Date.now },
     room: {

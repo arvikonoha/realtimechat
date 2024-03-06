@@ -1,7 +1,7 @@
 const Room = require("../models/Room")
 
-module.exports.create = (name, admin) => {
-    const roomDocument = new Room({name, admin})
+module.exports.create = (roomDetails) => {
+    const roomDocument = new Room(roomDetails)
     return roomDocument.save()
 }
 

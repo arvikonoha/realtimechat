@@ -5,10 +5,14 @@ const Schema = mongoose.Schema({
         type: String,
         required: true
     },
+    project: {
+        type: String,
+        required: true
+    },
     admin: {
         type: mongoose.Schema.ObjectId,
         ref: 'users',
-        required: true
+        required: false
     },
 })
 

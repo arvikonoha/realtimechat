@@ -1,84 +1,94 @@
 const orm = require('../orm')
 
-module.exports = (io, room) => async (socket) => {
+module.exports = (io, project) => async (socket) => {
     try {
-      console.log('Connected to the room ', room)
+      console.log('Connected to the project ', project)
 
       const socketID = socket.id;
       
-      socket.user = socket.request.user
+      socket.user = socket.request.user;
       const socketUser = socket.user
-
-      socket.join(`${room}-${socketUser.id}`)
 
       /* 1. Make a list of active users */
       let users = new Map();
       let rooms = new Map();
-      for (let [id, socket] of io.of(room).sockets) {
+      
+      let projectDocument = await orm.rooms.list({name: project})
 
-        /* Get the previous convorsation between existing and the new user */
-        const previousConversations = await orm.messages.getMessagesForID(socket.user.id, socketUser.id)
+      if (!projectDocument.length) {
+        projectDocument = await orm.rooms.create({name: project, project})
+      } else {
+        projectDocument = projectDocument[0]
+      }
+      
+      socket.join(`${project}-${socketUser.id}`)
+      for (let [id, socket] of io.of(project).sockets) {
 
         /* Update the active user list */
         users.set(socket.user.id,{
           socketID: id,
           name: socket.user.name,
           id: socket.user.id,
-          messages: previousConversations
+          messages: []
         });
 
         /* Send the connected user and their messages to the existing active user */
-        io.of(room).to(id).emit('user connected', {
+        io.of(project).to(`${project}-${socket.user.id}`).emit('user connected', {
           socketID,
           name: socketUser.name,
           id: socketUser.id,
-          messages: previousConversations
+          messages: []
         })
       }
 
-      const existingRooms = await orm.room.list()
+      const existingRooms = await orm.rooms.list({project})
 
       for (let room of existingRooms) {
         
         /* Get the previous convorsation between existing and the new user */
-        const previousConversations = await orm.messages.getMessagesForRoom(room._id)
         socket.join(room._id.toString())
         rooms.set(room._id,{
           name: room.name,
           id: room._id,
-          messages: previousConversations
+          project: room.project,
+          messages: []
         });
       }
+
       /* Send the active users, rooms list to the socket connected */
       socket.emit("users", Array.from(users.values()));
-      socket.emit("rooms", Array.from(rooms.values()));
+      socket.emit("rooms", Array.from(rooms.values()).filter(room => room.name !== room.project));
 
       socket.on('room:created', async (newRoom) => {
         socket.join(newRoom.id)
-        io.of(room).emit('room connected', {...newRoom, messages: []})
+        io.of(project).emit('room connected', {...newRoom, messages: []})
       })
+
       /* Handle chat sent */
-      socket.on('chat:send', async ({to, content, targetRoom=room}, callback) => {
+      socket.on('chat:send', async ({to, content, targetRoom}, callback) => {
+          targetRoom = targetRoom || projectDocument._id
+
           const result = await orm.messages.create({
             to,
             from: socket.user.id,
             content,
-            room: targetRoom
+            room: targetRoom,
+            project
           })
-          const roomName = targetRoom === room ? `${room}-${to}`: targetRoom
-          console.log(roomName, room)
-          io.of(room).to(roomName).emit('chat:reply', {...result._doc, from: {
+          const roomName = targetRoom === projectDocument._id ? `${project}-${to}`: targetRoom
+          io.of(project).to(roomName).emit('chat:reply', {...result._doc, from: {
             _id: socket.user._id,
             name: socket.user.name
           }})
-          callback({...result._doc, from: {
+          if (callback) callback({...result._doc, from: {
             _id: socket.user._id,
             name: socket.user.name
           }})
+          
       });
   
       socket.on('disconnect', () => {
-        io.of(room).emit('user disconnected', {
+        io.of(project).emit('user disconnected', {
           name: socketUser.name,
           id: socketUser.id,
         })

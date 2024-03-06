@@ -1,50 +1,51 @@
 const orm = require('../orm')
-const bcrypt = require('bcrypt')
 const fs = require('fs')
 const path = require('path')
-const jwt = require('jsonwebtoken')
-const PRIVATE_KEY = fs.readFileSync(path.join(__dirname,'..','keys', 'private.key')).toString()
+const axios = require('axios')
 module.exports.register = async function register(req, res) {
-    const {name, password} = req.body
-    const existingUsers = await orm.users.getByName(name)
-    if (existingUsers.length) return res.status(402).json({
-        message: 'User already exists'
-    })
-
-    const salt = await bcrypt.genSalt()
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    const id = await orm.users.create({
-        name,
-        password: hashedPassword
-    })
-
-    const token = jwt.sign({
-        sub: id
-    }, PRIVATE_KEY, { algorithm: 'RS256', expiresIn: 1200000 });
-    
-    res.json({
-        token
-    })
+    try {
+        const response = await axios.post('http://localhost:4329/auth/register', req.body, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        if (response.status === 200) {
+            const { token, user } = response.data
+            await orm.users.create(user)
+            return res.json({ token })
+        } else {
+            return res.status(response.status).json(response.data)
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: 'Internal server error' })
+    }
 }
 
 module.exports.login = async function login(req, res) {
-    const {name, password} = req.body
-    const existingUsers = await orm.users.getByName(name)
-    if (!existingUsers.length) res.status(403).json({
-        message: 'Username or password is invalid'
-    })
-    const {password: hashedPassword, id} = existingUsers[0]
+    try {
+        const response = await axios.post('http://localhost:4329/auth/login', req.body, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
 
-    const isValidPassword = await bcrypt.compare(password, hashedPassword)
+        return res.status(response.status).json(response.data)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Internal server error' })
+    }
+}
 
-    if (!isValidPassword) return res.status(403).json({message: 'Username or password is invalid'})
-
-    const token = jwt.sign({
-        sub: id
-    }, PRIVATE_KEY, { algorithm: 'RS256', expiresIn: 1200000 });
-    
-    res.json({
-        token
-    })
+module.exports.integration = async function integration(req, res) {
+    try {
+        const { partner, publicKey } = req.body
+        if (!partner || !publicKey) return res.status(400).json({ error: 'Payload must have partner and publicKey' })
+        fs.writeFileSync(path.join(__dirname, '..', 'keys', `${partner}-public.key`), publicKey)
+        return res.json({
+            message: `Partner ${partner} successfully added`
+        })
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to add partner, publicKey' })
+    }
 }

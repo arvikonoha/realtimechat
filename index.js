@@ -15,13 +15,17 @@ mongoose.connect(`mongodb://localhost:27016/realtime-chat-db`, {
 const app = express();
 const httpServer = createServer(app);
 const routes = require('./routes').routes
-const ioHandler = require('./routes').ioHandler
+const ioHandler = require('./utils').sockets.ioHandler
 
+const io = new Server(httpServer, {cors: {origin: ["http://localhost:3001", "http://localhost:3002"]}})
 app.use(cors());
+app.use((req, res, next) => {
+  req.io = io
+  next()
+})
 app.use(express.json());
 app.use('/', routes)
 
-const io = new Server(httpServer, {cors: {origin: "http://localhost:3001"}})
 ioHandler(io)
 
 swaggerDocs(app, 4000)
