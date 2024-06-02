@@ -18,8 +18,8 @@ module.exports.authenticate = function authenticate(req, res, next) {
 
   const token = header.substring(7);
   jwt.verify(token, PUBLIC_KEY, async (err, decoded) => {
-
     if (err) {
+      console.log(err, 'Failed to authenticate')
       return next(new Error("Token expired"));
     }
     const user = await User.findById(decoded.sub)

@@ -28,7 +28,6 @@ const AuthModal = ({isAuthenticated, setAuthToken, logOut}) => {
         e.preventDefault()
         const userNameValid = validateUserName(credentials.name);
         const passwordValid = validatePassword(credentials.password);
-    
         if (!userNameValid) {
           setValidationMessages((prevMessages) => ({
             ...prevMessages,
@@ -105,7 +104,7 @@ const AuthModal = ({isAuthenticated, setAuthToken, logOut}) => {
         <div className="validation-message">{validationMessages.userName}</div>
       ): null}
         <input type="password" placeholder="Password" onChange={onInputChange} name='password' value={credentials.password} />
-        {validationMessages.password && authType === 'REGISTER' ? (
+        {validationMessages.password ? (
         <div className="validation-message">{validationMessages.password}</div>
       ): null}
         {

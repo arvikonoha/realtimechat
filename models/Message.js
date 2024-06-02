@@ -14,6 +14,10 @@ const MessageSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    media: [{
+        key: String,
+        description: String,
+    }],
     "project": {
         type: String
     },

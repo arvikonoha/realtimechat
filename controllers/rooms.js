@@ -14,7 +14,6 @@ module.exports.create = async (req, res) => {
         
         res.json(response)
     } catch (error) {
-        console.log(error)
         res.status(500).json({message: 'Internal server error'})
     }
 }
@@ -27,7 +26,6 @@ module.exports.getOrCreateDiscussion = async (req, res) => {
         const response = await orm.rooms.create({name,project})
         return res.json(response)
     } catch (error) {
-        console.log(error)
         return res.status(500).json({error: 'Internal server error'})
     }
 }

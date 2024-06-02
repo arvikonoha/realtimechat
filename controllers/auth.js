@@ -4,11 +4,8 @@ const path = require('path')
 const axios = require('axios')
 module.exports.register = async function register(req, res) {
     try {
-        const response = await axios.post('http://localhost:4329/auth/register', req.body, {
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
+        // TODO: Replace URL with conf value
+        const response = await axios.post('http://localhost:3000/v1/auth/register', req.body)
         if (response.status === 200) {
             const { token, user } = response.data
             await orm.users.create(user)
@@ -17,22 +14,22 @@ module.exports.register = async function register(req, res) {
             return res.status(response.status).json(response.data)
         }
     } catch (error) {
-        console.log(error)
         res.status(500).json({ error: 'Internal server error' })
     }
 }
 
 module.exports.login = async function login(req, res) {
     try {
-        const response = await axios.post('http://localhost:4329/auth/login', req.body, {
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-
+        // TODO: Replace URL with conf value
+        const response = await axios.post('http://localhost:3000/v1/auth/login', req.body)
+        if (response.status === 200) {
+            let existingUser = await orm.users.getByName(response.data.user.name)
+            if (existingUser === null) await orm.users.create(response.data.user)
+            
+            return res.status(response.status).json({token: response.data.token})
+        }
         return res.status(response.status).json(response.data)
     } catch (error) {
-        console.log(error)
         return res.status(500).json({ error: 'Internal server error' })
     }
 }

@@ -6,7 +6,7 @@ const { createServer } = require("http");
 const mongoose = require('mongoose')
 const swaggerDocs = require('./swagger-init.js')
 
-mongoose.connect(`mongodb://localhost:27016/realtime-chat-db`, {
+mongoose.connect(`${process.env.MONGO_URI}/realtime-chat-db`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {

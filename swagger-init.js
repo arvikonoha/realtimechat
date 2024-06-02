@@ -6,7 +6,7 @@ const options = {
     openapi: '3.0.0',
     info: {
         title: 'Real time chat application',
-        description: "API End points for the real time chat applicaions",
+        description: "API End points for the real time chat application",
         contact: {
         name: "Aravinda B R",
         email: "arvikonoha@google.com",

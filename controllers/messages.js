@@ -13,7 +13,8 @@ module.exports.getMessagesForRoom = async (req, res) => {
 
 module.exports.getMessagesForID = async (req, res) => {
     try {
-        const {from, to, project} = req.query
+        let {from, to, project} = req.query
+        if (!to) to = from;
         const messages = await orm.messages.getMessagesForID({from, to, project})
         res.json({messages})
     } catch (error) {

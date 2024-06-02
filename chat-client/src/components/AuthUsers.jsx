@@ -44,7 +44,7 @@ const AuthUsers = ({users, userSelected, selectedUserId, selectedRoomID, rooms, 
             {users.map(user => <li key={user.id} className={`${user.id === selectedUserId?'selected-user':''}`}> <p>{user.name}</p>{user.id !== selectedUserId ? <button className='user-select' onClick={onUserSelected(user)}><FontAwesomeIcon icon="fa-solid fa-message" /></button>: null } </li>)}
         </ul> : null
     } 
-    <ul className="room-list">
+    {users.length ? <ul className="room-list">
     {
         users.length ? <h2 style={{display: 'flex', justifyContent:'space-between', alignItems: 'center'}}>
             <span style={{display: 'block'}}>Rooms</span>
@@ -59,7 +59,7 @@ const AuthUsers = ({users, userSelected, selectedUserId, selectedRoomID, rooms, 
                 <button className='rooms-select' onClick={onRoomSelected(room)}><FontAwesomeIcon icon="fa-solid fa-message" /></button>: null } </li>)
         : null
     }
-    </ul>
+    </ul> : null}
     {
         isModalVisible ? <form onSubmit={createroom} className="room-modal">
         <h2>Create new room</h2>
